@@ -1,6 +1,5 @@
 import numpy as np
-
-from data.dataset import MovieLensDataset
+import pandas as pd
 
 class Recommender:
     SVD_NAIVE = 0
@@ -9,16 +8,25 @@ class Recommender:
         self._method = method
         self._pred = None
         
-    def load_dataset(self, dataset: MovieLensDataset):
-        """Load the dataset into the recommender model.
+    def load_train_dataset(self, dataset: pd.DataFrame):
+        """Load the dataset (the pivot) into the recommender model.
 
         Args:
-            dataset (MovieLensDataset): The dataset to load.
+            dataset (pd.DataFrame): The pivot user_id - ratings pivot dataframe.
         """
-        self._dataset = dataset
+        self._train_dataset = dataset
+        
+    def load_test_dataset(self, dataset: pd.DataFrame):
+        """Load the test dataset into the recommender model.
+
+        Args:
+            dataset (pd.DataFrame): The test dataset.
+        """
+        self._test_dataset = dataset
         
     def fit(self, k : int):
         """Fit the recommender model.
+        
         Args:
             k (int): The number of latent features to use in the SVD.
         """
@@ -35,9 +43,9 @@ class Recommender:
             k (int): The number of latent features to use in the SVD.
         """
         
-        self._R = self._dataset.get_rating_pivot().fillna(0).values
+        ratings = self._train_dataset.fillna(self._train_dataset.mean(axis=0)).values
         
-        u, e, v = np.linalg.svd(self._R, full_matrices=False)
+        u, e, v = np.linalg.svd(ratings, full_matrices=False)
         # Retain top-k latent features
         u = u[:, :k]
         e = e[:k]
@@ -62,4 +70,20 @@ class Recommender:
         
         return self._pred[user_id - 1, item_id - 1]   
         
-      
+    def evaluate(self) -> float:
+        """Evaluate the recommender model using RSME metric
+
+        Returns:
+            float: The RMSE score.
+        """
+        total_error = 0
+        count = 0
+        
+        for user_id, item_id, rating, _ in self._test_dataset.itertuples(index=False):
+            pred_rating = self.predict(user_id, item_id)
+            error = rating - pred_rating
+            total_error += error ** 2
+            count += 1
+            
+        return np.sqrt(total_error / count)
+    

@@ -37,14 +37,32 @@ class MovieLensDataset:
         print(f"Rating count: {self.rating_count}")
         print("\n")
         
-    def get_rating_pivot(self) -> pd.DataFrame:
-        """Get the user rating pivot table.
-        The pivot table has user_id as rows and item_id as columns, with ratings as values.
+    def split_dataset(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Split the dataset into training, validation, and test sets.
+        The training set contains 80% of the ratings, the validation set contains 10% of the ratings,
+        and the test set contains 10% of the ratings.
 
         Returns:
-            pd.DataFrame: The user rating pivot table.
+            tuple(pd.DataFrame, pd.DataFrame, pd.DataFrame): _description_
         """
         
-        rating_pivot = self._user_rating_df.pivot(index='user_id', columns='item_id', values='rating')
-        return rating_pivot
+        # Get 80% of the ratings for training
+        train_size = int(0.8 * self.rating_count)
+        val_size = int(0.1 * self.rating_count)
+        
+        # Shuffle the user rating dataframe
+        shuffled_df = self._user_rating_df.sample(frac=1, random_state=8535).reset_index(drop=True)
+        
+        # Split the shuffled dataframe into training, validation, and test sets
+        train_df = shuffled_df.iloc[:train_size]
+        val_df = shuffled_df.iloc[train_size:train_size + val_size]
+        test_df = shuffled_df.iloc[train_size + val_size:]
+        
+        assert len(train_df) + len(val_df) + len(test_df) == self.rating_count, "Dataset split error: Sizes do not match."
+        
+        train_pivot = train_df.pivot(index='user_id', columns='item_id', values='rating')
+        all_items = range(1, self.movie_count + 1)
+        train_pivot = train_pivot.reindex(columns=all_items, fill_value=0)
+
+        return train_pivot, val_df, test_df
         
