@@ -1,3 +1,6 @@
+# Ignore all data files in the ml-20m dataset
+/data/ml-20m/*.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
