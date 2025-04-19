@@ -1,40 +1,35 @@
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
 
 class MovieLensDataset:
-    def __init__(self, dir : str):
-        # Load dataset metadata
-        info = pd.read_csv(dir + "u.info", sep=' ', header=None)
-        self.user_count = int(info.iloc[0, 0])
-        self.movie_count = int(info.iloc[1, 0])
-        self.rating_count = int(info.iloc[2, 0])
-        
+    def __init__(self, dir : str):   
         # user_id | item_id | rating | timestamp
-        self._user_rating_df = pd.read_csv(dir + "u.data", sep="\t", header=None, names=["user_id", "item_id", "rating", "timestamp"])
-
-        # user id | age | gender | occupation | zip code
-        self._user_info_df = pd.read_csv(dir + "u.user", sep="|", header=None, names=["user_id", "age", "gender", "occupation", "zip_code"])
-        # One-hot encode the occupation and gender columns
-        self._user_info_df = pd.get_dummies(self._user_info_df, columns=['gender'])
-        self._user_info_df = pd.get_dummies(self._user_info_df, columns=['occupation'], prefix='occ')
-        # Normalize the age column to be between 0 and 1
-        self._user_info_df['age'] = MinMaxScaler().fit_transform(self._user_info_df[['age']])
-      
-        # item id | movie title | release date | IMDb URL | unknown | Action | Adventure | Animation | Children's | Comedy | Crime | Documentary | Drama | Fantasy | Film-Noir | Horror | Musical | Mystery | Romance | Sci-Fi | Thriller | War | Western
-        self._movie_info_df = pd.read_csv(dir + "u.item", 
-                                sep="|", header=None,
-                                names=["movie_id", "movie_title", "release_date", "url",
-                                       "unknown", "Action", "Adventure", "Animation", "Children's", 
-                                       "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film-Noir", 
-                                       "Horror", "Musical", "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western"])
-        # Convert the release_date column to timestamp
-        self._movie_info_df['release_date'] = pd.to_datetime(self._movie_info_df['release_date'], errors='coerce')
-        self._movie_info_df['release_date'] = self._movie_info_df['release_date'].astype('int64') // 10**9  # Convert to seconds since epoch
+        self._user_rating_df = pd.read_csv(dir + "ratings.csv", sep=",", header=0)
         
-        print("MovieLens dataset loaded successfully.")
-        print(f"User count: {self.user_count}")
-        print(f"Movie count: {self.movie_count}")
+        # movid_id | title | genres
+        self._movie_df = pd.read_csv(dir + "movies.csv", sep=",", header=0)
+        all_genres = [
+            "Action", "Adventure", "Animation", "Children's", "Comedy", "Crime",
+            "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror", "Musical",
+            "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western"
+        ]
+        # One-hot encoding of genres
+        for genre in all_genres:
+            self._movie_df[genre] = self._movie_df["genres"].apply(lambda x: 1 if genre in x else 0)
+        self._movie_df.drop(columns=["genres"], inplace=True)
+                
+        self.rating_count = self._user_rating_df.shape[0]
+        self.user_count = self._user_rating_df["userId"].nunique()
+        self.movie_count = self._movie_df.shape[0]
+        
+        self.user_ids = self._user_rating_df['userId'].astype('category').cat.codes
+        self.movie_ids = self._user_rating_df['movieId'].astype('category').cat.codes
+        
+        self.userid_to_idx = { user_id: i for i, user_id in enumerate(self._user_rating_df['userId'].unique()) }
+        self.movieid_to_idx = { movie_id: i for i, movie_id in enumerate(self._user_rating_df['movieId'].unique()) }
+        
+        print("MovieLens 20M dataset loaded successfully.")
         print(f"Rating count: {self.rating_count}")
+        print(f"Movie count: {self.movie_count}")
         print("\n")
         
     def split_dataset(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -59,10 +54,6 @@ class MovieLensDataset:
         test_df = shuffled_df.iloc[train_size + val_size:]
         
         assert len(train_df) + len(val_df) + len(test_df) == self.rating_count, "Dataset split error: Sizes do not match."
-        
-        train_pivot = train_df.pivot(index='user_id', columns='item_id', values='rating')
-        all_items = range(1, self.movie_count + 1)
-        train_pivot = train_pivot.reindex(columns=all_items, fill_value=0)
-
-        return train_pivot, val_df, test_df
+    
+        return train_df, val_df, test_df
         
