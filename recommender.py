@@ -4,6 +4,7 @@ import pandas as pd
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds
 
+
 from util import measure_execution_time
 
 class Recommender:
