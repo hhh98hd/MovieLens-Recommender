@@ -19,7 +19,26 @@ class MovieLensDataset:
         for genre in all_genres:
             self._movie_df[genre] = self._movie_df["genres"].apply(lambda x: 1 if genre in x else 0)
         self._movie_df.drop(columns=["genres"], inplace=True)
-                
+        
+        def extract_year(title: str) -> int:
+            """Extract the year from the title string."""
+            if "(" in title and ")" in title:
+                year = title.split("(")[-1].split(")")[0]
+                if year.isdigit():
+                    return int(year.strip())
+                else:
+                    return 0
+            return 0
+        self._movie_df["year"] = self._movie_df["title"].copy().apply(extract_year)
+        avg_year = int(round(self._movie_df["year"].mean()))  # Ensure avg_year is int
+        def year_to_timestamp(year: int) -> int:
+            """Convert the year to a timestamp."""
+            if year > 0:
+                return pd.Timestamp(year=year, month=1, day=1).timestamp()
+            else:
+                return pd.Timestamp(year=avg_year, month=1, day=1).timestamp()
+        self._movie_df["year"] = self._movie_df["year"].apply(year_to_timestamp)
+        
         self.rating_count = self._user_rating_df.shape[0]
         self.user_count = self._user_rating_df["userId"].nunique()
         self.movie_count = self._movie_df.shape[0]

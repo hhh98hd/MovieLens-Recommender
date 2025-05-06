@@ -22,26 +22,31 @@ def tune_k(recommender : Recommender) -> int:
 
 if __name__ == "__main__":
     dataset = MovieLensDataset("data/ml-20m/")
-    train_df, val_df, test_df = dataset.split_dataset()
     
-    train_df = train_df.drop(columns=['timestamp'])
-    val_df = val_df.drop(columns=['timestamp'])
-    test_df = test_df.drop(columns=['timestamp'])
+    print(dataset._movie_df)
     
-    recommender = Recommender(  user_count=dataset.user_count, movie_count=dataset.movie_count,
-                                user_ids=dataset.user_ids, movie_ids=dataset.movie_ids,
-                                userid_to_idx=dataset.userid_to_idx, movieid_to_idx=dataset.movieid_to_idx,
-                                method=Recommender.SVD_NAIVE )
-    recommender.load_train_dataset(train_df)
-    recommender.load_test_dataset(val_df)
-    best_k = tune_k(recommender)
+    # train_df, val_df, test_df = dataset.split_dataset()
     
-    # Merge the train and validation datasets
-    train_val_df = pd.concat([train_df, val_df], ignore_index=True)
-    recommender.load_train_dataset(train_val_df)
-    recommender.load_test_dataset(test_df)
+    # train_df = train_df.drop(columns=['timestamp'])
+    # val_df = val_df.drop(columns=['timestamp'])
+    # test_df = test_df.drop(columns=['timestamp'])
     
-    recommender.fit(best_k)
+    # recommender = Recommender(  user_count=dataset.user_count, movie_count=dataset.movie_count,
+    #                             user_ids=dataset.user_ids, movie_ids=dataset.movie_ids,
+    #                             userid_to_idx=dataset.userid_to_idx, movieid_to_idx=dataset.movieid_to_idx,
+    #                             method=Recommender.SVD_NAIVE )
+    # recommender.load_train_dataset(train_df)
+    # recommender.load_test_dataset(val_df)
     
-    rmse = recommender.evaluate()
-    print(f"RMSE: {rmse}")
+    
+    # best_k = tune_k(recommender)
+    
+    # # Merge the train and validation datasets
+    # train_val_df = pd.concat([train_df, val_df], ignore_index=True)
+    # recommender.load_train_dataset(train_val_df)
+    # recommender.load_test_dataset(test_df)
+    
+    # recommender.fit(best_k)
+    
+    # rmse = recommender.evaluate()
+    # print(f"RMSE: {rmse}")
