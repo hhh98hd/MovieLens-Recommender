@@ -8,6 +8,7 @@ from util import measure_execution_time
 
 class Recommender:
     SVD_NAIVE = 0
+    HCAE = 1
     
     def __init__(self, user_count : int, movie_count : int,
                  user_ids : pd.Series, movie_ids : pd.Series, 
@@ -22,6 +23,9 @@ class Recommender:
         
         self._userid_to_idx = userid_to_idx
         self._movieid_to_idx = movieid_to_idx
+        
+        if method == self.HCAE:
+            pass
     
     def load_train_dataset(self, dataset: pd.DataFrame):
         """Load the dataset (the pivot) into the recommender model.
@@ -78,6 +82,10 @@ class Recommender:
         self._u = u[:, ::-1]          # reorder the columns in U
         self._e = e[::-1]             # [σ_large, σ_small]
         self._v = v[::-1, :]          # reorder the rows in VT
+        
+    @measure_execution_time
+    def _fit_hcae(self, k : int):
+        pass
     
     def predict(self, user_id : int, movie_id : int) -> float:
         """Predict the rating for a given user and item.
