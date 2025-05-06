@@ -1,6 +1,9 @@
 import pandas as pd
 
+from util import measure_execution_time
+
 class MovieLensDataset:
+    @measure_execution_time
     def __init__(self, dir : str):   
         # user_id | item_id | rating | timestamp
         self._user_rating_df = pd.read_csv(dir + "ratings.csv", sep=",", header=0)

@@ -4,6 +4,8 @@ import pandas as pd
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds
 
+from util import measure_execution_time
+
 class Recommender:
     SVD_NAIVE = 0
     
@@ -20,7 +22,7 @@ class Recommender:
         
         self._userid_to_idx = userid_to_idx
         self._movieid_to_idx = movieid_to_idx
-        
+    
     def load_train_dataset(self, dataset: pd.DataFrame):
         """Load the dataset (the pivot) into the recommender model.
 
@@ -43,7 +45,7 @@ class Recommender:
         for i in range(R_sparse.nnz):
             movie_idx = R_sparse.indices[i]
             self._R_centered.data[i] -= self._rating_means[movie_idx]
-        
+    
     def load_test_dataset(self, dataset: pd.DataFrame):
         """Load the test dataset into the recommender model.
 
@@ -51,7 +53,7 @@ class Recommender:
             dataset (pd.DataFrame): The test dataset.
         """
         self._test_dataset = dataset
-        
+    
     def fit(self, k : int):
         """Fit the recommender model.
         
@@ -63,7 +65,8 @@ class Recommender:
             self._fit_naive(k)
         else:
             raise ValueError("Unknown method")
-        
+    
+    @measure_execution_time
     def _fit_naive(self, k : int):
         """Fit the recommender model using naive SVD.
 
@@ -75,7 +78,7 @@ class Recommender:
         self._u = u[:, ::-1]          # reorder the columns in U
         self._e = e[::-1]             # [σ_large, σ_small]
         self._v = v[::-1, :]          # reorder the rows in VT
-            
+    
     def predict(self, user_id : int, movie_id : int) -> float:
         """Predict the rating for a given user and item.
 

@@ -5,9 +5,18 @@ from recommender import Recommender
 
 def tune_k(recommender : Recommender) -> int:
     best_k = -1
-    prev_rmse = float('inf')
+    best_rmse = float('inf')
     
-    ks = [2, 5, 7, 10, 20, 50, 70, 100, 150, 175, 200]
+    ks = [1, 2, 5, 7, 10, 20, 50, 70, 100, 150, 175, 200, 500]
+    for k in ks:
+        recommender.fit(k)
+        rmse = recommender.evaluate()
+        
+        print(f"RMSE for k={k}: {rmse}")
+        
+        if rmse < best_rmse:
+            best_rmse = rmse
+            best_k = k
     
     return best_k
 
@@ -25,8 +34,7 @@ if __name__ == "__main__":
                                 method=Recommender.SVD_NAIVE )
     recommender.load_train_dataset(train_df)
     recommender.load_test_dataset(val_df)
-    
-    best_k = 200
+    best_k = tune_k(recommender)
     
     # Merge the train and validation datasets
     train_val_df = pd.concat([train_df, val_df], ignore_index=True)
