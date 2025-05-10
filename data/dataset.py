@@ -1,6 +1,6 @@
 import pandas as pd
 
-from util import measure_execution_time
+from util import measure_execution_time, measure_memory
 
 class MovieLensDataset:
     @measure_execution_time

@@ -5,7 +5,7 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds
 
 
-from util import measure_execution_time
+from util import measure_execution_time, measure_memory
 
 class Recommender:
     SVD_NAIVE = 0
@@ -71,6 +71,8 @@ class Recommender:
         else:
             raise ValueError("Unknown method")
     
+    
+    @measure_memory
     @measure_execution_time
     def _fit_naive(self, k : int):
         """Fit the recommender model using naive SVD.
