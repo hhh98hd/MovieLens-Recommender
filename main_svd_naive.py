@@ -36,8 +36,8 @@ if __name__ == "__main__":
     recommender.load_train_dataset(train_df)
     recommender.load_test_dataset(val_df)
     
-    
     best_k = tune_k(recommender)
+    print(f"Best k: {best_k}")
     
     # Merge the train and validation datasets
     train_val_df = pd.concat([train_df, val_df], ignore_index=True)
@@ -48,3 +48,4 @@ if __name__ == "__main__":
     
     rmse = recommender.evaluate()
     print(f"RMSE: {rmse}")
+    
